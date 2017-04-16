@@ -18,6 +18,12 @@ ssh:
       IdentityFile: ~/.ssh/id_ed25519
     another.host:
       User: andreas
+caddy:
+  sites:
+    blog.klingt.net:
+      root: /var/www/sites/blog.klingt.net
+      log: stdout
+      markdown: /
 `
 
 const testTemplateSSH = `{{range $host, $values := .ssh.hosts -}}
@@ -36,6 +42,23 @@ const testTemplateSSHExpected = `Host some.host
 Host another.host
 	User andreas
 
+`
+
+const testTemplateCaddy = `{{range $host, $values := .caddy.sites -}}
+{{$host}} {
+	gzip
+{{- range $k, $v := $values}}
+	{{$k}} {{$v}}
+{{- end}}
+}
+{{end}}`
+
+const testTemplateCaddyExpected = `blog.klingt.net {
+	gzip
+	root /var/www/sites/blog.klingt.net
+	log stdout
+	markdown /
+}
 `
 
 type testResources struct {
@@ -92,11 +115,22 @@ func TestIntegration(t *testing.T) {
 		t.Fatal("failed with error: %s", err)
 	}
 
+	res.writeFile(t, "caddy-config."+TmplExt, testTemplateCaddy)
+	if err = run(res.source, res.target); err != nil {
+		t.Fatal("failed with error: %s", err)
+	}
+
 	data, err := ioutil.ReadFile(path.Join(res.target, "ssh-config"))
 	if err != nil {
 		t.Fatalf("failed to read %q: %s", path.Join(res.target, "ssh-config"), err)
 	}
 	compareText(t, string(data), testTemplateSSHExpected)
+
+	data, err = ioutil.ReadFile(path.Join(res.target, "caddy-config"))
+	if err != nil {
+		t.Fatalf("failed to read %q: %s", path.Join(res.target, "caddy-config"), err)
+	}
+	compareText(t, string(data), testTemplateCaddyExpected)
 }
 
 func compareText(t *testing.T, actual, expected string) {
