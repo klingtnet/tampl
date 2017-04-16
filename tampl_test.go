@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -95,10 +96,27 @@ func TestIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read %q: %s", path.Join(res.target, "ssh-config"), err)
 	}
-	if string(data) != testTemplateSSHExpected {
-		t.Fatalf(`expected:
+	compareText(t, string(data), testTemplateSSHExpected)
+}
+
+func compareText(t *testing.T, actual, expected string) {
+	print := func(a, b string) {
+		t.Logf(`actual:
 %s
-but was:
-%s`, testTemplateSSHExpected, string(data))
+expected:
+%s`, a, b)
+	}
+	actualLines := strings.Split(actual, "\n")
+	expectedLines := strings.Split(expected, "\n")
+	if len(actualLines) != len(expectedLines) {
+		print(actual, expected)
+		t.Fatalf("number of lines differ: actual=%d != expected=%d", len(actualLines), len(expectedLines))
+	}
+
+	for idx, a := range actualLines {
+		if a != expectedLines[idx] {
+			print(actual, expected)
+			t.Fatalf("line %d differs: actual=%q expected=%q", idx, a, expectedLines[idx])
+		}
 	}
 }
