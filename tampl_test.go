@@ -12,35 +12,28 @@ const testVars = `# tampl test variables
 ssh:
   hosts:
     some.host:
-      port: 1234
-      compression: 'no'
-      identityFile: ~/.ssh/id_ed25519
+      Port: 1234
+      Compression: 'no'
+      IdentityFile: ~/.ssh/id_ed25519
     another.host:
-      user: kn
+      User: andreas
 `
 
-const testTemplateSSH = `{{range $k, $v := .ssh.hosts}}Host {{$k}}
-{{if $v.port -}}
-Port {{$v.port}}
-{{end -}}
-{{if $v.user -}}
-User {{$v.user}}
-{{end -}}
-{{if $v.compression -}}
-Compression {{$v.compression}}
-{{end -}}
-{{if $v.identityFile -}}
-IdentityFile {{$v.identityFile}}
-{{end}}
+const testTemplateSSH = `{{range $host, $values := .ssh.hosts -}}
+Host {{$host}}
+{{- range $k, $v := $values}}
+	{{$k}} {{$v}}
+{{- end}}
+
 {{end}}`
 
 const testTemplateSSHExpected = `Host some.host
-Port 1234
-Compression no
-IdentityFile ~/.ssh/id_ed25519
+	Port 1234
+	Compression no
+	IdentityFile ~/.ssh/id_ed25519
 
 Host another.host
-User kn
+	User andreas
 
 `
 
