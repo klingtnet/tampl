@@ -69,7 +69,7 @@ func run(sourceDir, targetDir string) error {
 		outFilepath := path.Join(targetDir, strings.TrimSuffix(tmpl.Name(), "."+TmplExt))
 		go func(fpath string, tmpl *template.Template, vars Vars) {
 			if err = renderToFile(fpath, tmpl, vars); err != nil {
-				fmt.Println(err)
+				fmt.Fprintf(os.Stderr, "failed to render: %q", fpath)
 				mtx.Lock()
 				fails = append(fails, fpath)
 				mtx.Unlock()
