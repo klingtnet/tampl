@@ -11,6 +11,8 @@ import (
 
 	"strings"
 
+	"sync"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -60,12 +62,27 @@ func run(sourceDir, targetDir string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(tmpls.Templates()))
+	var mtx sync.Mutex
+	fails := make([]string, 0)
+
 	for _, tmpl := range tmpls.Templates() {
 		outFilepath := path.Join(targetDir, strings.TrimSuffix(tmpl.Name(), "."+TmplExt))
-		if err = renderToFile(outFilepath, tmpl, vars); err != nil {
-			fmt.Println(err)
-			os.Exit(6)
-		}
+		go func(fpath string, tmpl *template.Template, vars Vars) {
+			if err = renderToFile(fpath, tmpl, vars); err != nil {
+				fmt.Println(err)
+				mtx.Lock()
+				fails = append(fails, fpath)
+				mtx.Unlock()
+			}
+			wg.Done()
+		}(outFilepath, tmpl, vars)
+	}
+	wg.Wait()
+
+	if len(fails) != 0 {
+		return fmt.Errorf("failed to render templates: %v", fails)
 	}
 	return nil
 }
