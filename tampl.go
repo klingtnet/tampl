@@ -7,11 +7,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"text/template"
-
 	"strings"
-
 	"sync"
+	"text/template"
 
 	"gopkg.in/yaml.v2"
 )
