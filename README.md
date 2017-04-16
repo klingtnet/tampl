@@ -12,3 +12,11 @@ tampl <source> <target>
 	source: a directory containing a number of '.tmpl' files and '_vars.yml' which stores the variables and values.
 	target: the directory where the rendered templates should be placed into.
 ```
+
+## Installation
+
+`tampl` is go gettable:
+
+```
+$ go get -v github.com/klingtnet/tampl
+```
